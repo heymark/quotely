@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Quotely</title>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js' type='text/javascript'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.6.1/lodash.min.js' type='text/javascript'></script>
+</head>
+
+<body>
+    <q id="quote">Whoops, JavaScript is broken!</q>
+    <cite id="source">A Developer</cite>
+    <button id="refresh">New Quote</button>
+    <a id="tweet">Tweet This</a>
+    <script>
+        var quotes = [
+            {
+                quote: 'Yes!',
+                source: 'Nelson Mandela'
+            },
+            {
+                quote: 'Woo!',
+                source: 'Mahatma Gandhi'
+            },
+            {
+                quote: 'Yay!',
+                source: 'George W. Bush'
+            },
+            {
+                quote: 'Mmm!',
+                source: 'Shub-Niggurath'
+            }
+        ];
+
+        function getQuote(quoteArray) {
+            var quoteIndex = _.random(quoteArray.length - 1);
+            return quoteArray[quoteIndex];
+        }
+
+        function displayQuote(quoteObject) {
+            $('#quote').html(quoteObject.quote);
+            $('#source').html(quoteObject.source);
+        }
+
+        function refresh() {
+            var newQuote = getQuote(quotes);
+            displayQuote(newQuote);
+            buildTweetButton(newQuote);
+        }
+
+        function buildTweetButton(quoteObject) {
+            var tweetText = '"' + quoteObject.quote + '"' + ' – ' + quoteObject.source;
+            $('#tweet').attr('href', 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(tweetText));
+        }
+
+        $('#refresh').click(refresh);
+
+        $(refresh);
+    </script>
+</body>
+
+</html>
