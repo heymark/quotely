@@ -2,62 +2,75 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <title>Quotely</title>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js' type='text/javascript'></script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.6.1/lodash.min.js' type='text/javascript'></script>
+  <meta charset="UTF-8">
+  <title>Quotely</title>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js' type='text/javascript'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.6.1/lodash.min.js' type='text/javascript'></script>
 </head>
 
 <body>
-    <q id="quote">Whoops, JavaScript is broken!</q>
-    <cite id="source">A Developer</cite>
-    <button id="refresh">New Quote</button>
-    <a id="tweet">Tweet This</a>
-    <script>
-        var quotes = [
-            {
-                quote: 'Yes!',
-                source: 'Nelson Mandela'
-            },
-            {
-                quote: 'Woo!',
-                source: 'Mahatma Gandhi'
-            },
-            {
-                quote: 'Yay!',
-                source: 'George W. Bush'
-            },
-            {
-                quote: 'Mmm!',
-                source: 'Shub-Niggurath'
-            }
-        ];
+  <q id="quote">Whoops, JavaScript is broken!</q>
+  <cite id="attribution">A Developer</cite>
+  <span id="source"></span>
+  <button id="refresh">New Quote</button>
+  <a id="tweet">Tweet This</a>
+  <script>
+    function stripTags(inputString) {
+      return inputString.replace(/<\/?[^>]+>/gi, '');
+    }
 
-        function getQuote(quoteArray) {
-            var quoteIndex = _.random(quoteArray.length - 1);
-            return quoteArray[quoteIndex];
+    function stripTrailingWhiteSpace(inputString) {
+      return inputString.replace(/\s+$/, '');
+    }
+
+    function decodeEntities(encodedString) {
+      var container = document.createElement('textarea');
+      container.innerHTML = encodedString;
+      return container.value;
+    }
+
+    function formatQuote(inputString) {
+      var formattedQuote = inputString;
+      formattedQuote = stripTags(formattedQuote);
+      formattedQuote = stripTrailingWhiteSpace(formattedQuote);
+      formattedQuote = decodeEntities(formattedQuote);
+      return formattedQuote;
+    }
+
+    function displayQuote(quoteObject) {
+      var quote = formatQuote(quoteObject.content);
+      var attribution = quoteObject.title || 'Unknown';
+      var source = quoteObject.link || 'http://quotesondesign.com';
+
+      $('#quote').html(quote);
+      $('#attribution').html(attribution);
+      $('#source').html('via <a href=\"' + source + '\">Quotes on Design</a>');
+    }
+
+    function buildTweetButton(quoteObject) {
+      var tweetText = '“' + formatQuote(quoteObject.content) + '”'
+                          + ' – ' + quoteObject.title;
+      $('#tweet').attr('href', 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(tweetText));
+    }
+
+    function getQuote() {
+      var quoteObject = quoteObject || {};
+
+      $.ajax({
+        url: 'http://quotesondesign.com/wp-json/posts?filter[orderby]=rand&filter[posts_per_page]=1&_jsonp=?',
+        dataType: 'jsonp',
+        complete: function(jsonp) { 
+          quoteObject = jsonp.responseJSON[0];
+          displayQuote(quoteObject);
+          buildTweetButton(quoteObject);
         }
+      });
+    }
 
-        function displayQuote(quoteObject) {
-            $('#quote').html(quoteObject.quote);
-            $('#source').html(quoteObject.source);
-        }
+    $('#refresh').click(getQuote);
 
-        function refresh() {
-            var newQuote = getQuote(quotes);
-            displayQuote(newQuote);
-            buildTweetButton(newQuote);
-        }
-
-        function buildTweetButton(quoteObject) {
-            var tweetText = '"' + quoteObject.quote + '"' + ' – ' + quoteObject.source;
-            $('#tweet').attr('href', 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(tweetText));
-        }
-
-        $('#refresh').click(refresh);
-
-        $(refresh);
-    </script>
+    $(getQuote);
+  </script>
 </body>
 
 </html>
